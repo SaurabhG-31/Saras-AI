@@ -1,0 +1,688 @@
+                    <!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Smart Reaction Tutor</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<!-- Markdown -->
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+<style>
+/* Bottom Navigation */
+.navbar{
+  position:fixed; bottom:0; left:0; right:0;
+  background:#fff; display:flex; justify-content:space-around;
+  border-top:2px solid #ddd; padding:12px 0; font-weight:bold;
+}
+.nav-item{cursor:pointer; padding:8px 10px; color:#555;}
+.nav-item.active{color:#000; border-bottom:3px solid #6366f1;}
+
+/* Pages */
+.page{display:none; animation:fadeSlide .4s ease;}
+@keyframes fadeSlide{from{opacity:0; transform:translateY(10px);} to{opacity:1; transform:translateY(0);}}
+
+/* UI */
+body{font-family:"Segoe UI",Arial; background:#f5f7fa; padding:20px; margin-bottom:80px;}
+textarea,select,button{width:100%;padding:12px;margin-top:12px;font-size:16px;border:1px solid #ccc;border-radius:10px;}
+button{background:#2c3e50;color:white;font-weight:bold;cursor:pointer;}
+button:hover{background:#1a252f;}
+.output{background:white;padding:12px;margin-top:20px;border-radius:10px;}
+/* Make key labels bold and eye-catching */
+.output strong,
+.output b {
+    font-weight: 700;
+}
+
+.output .label {
+    font-weight: 600;
+    font-size: 15px;
+}
+
+.section{background:#f8fafc;padding:12px;border-left:4px solid #6366f1;border-radius:6px;margin-top:14px;}
+.item{background:white;padding:10px;border-radius:6px;margin-top:10px;}
+
+table{width:100%;border-collapse:collapse;margin-top:10px;}
+th,td{border:1px solid #ccc;padding:8px;}
+th{background:#e6e9ff;}
+
+.typing{font-family:monospace;padding:10px;color:#444;animation:blink 1s steps(1) infinite;}
+@keyframes blink{50%{opacity:.4;}}
+</style>
+  <!-- MathJax for Physics & Chemistry notation -->
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']],
+        displayMath: [['$$','$$'], ['\\[','\\]']]
+      },
+      svg: { fontCache: 'global' }
+    };
+  </script>
+
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+</head>
+
+<body>
+
+  <!-- LOGO -->
+  <div style="
+  display:flex;
+  align-items:center;
+  justify-content:flex-start;
+padding-left:10px;
+  gap:12px;
+  margin-bottom:15px;
+">
+
+  <img src="LOGO.png" style="height:45px;">
+
+  <div>
+    <div style="font-size:22px; font-weight:bold;">Saras AI</div>
+    <div style="font-size:13px; color:#666;">From confusion to clarity</div>
+  </div>
+
+</div>
+<!-- HOME -->
+<div id="page-home" class="page" style="display:block;">
+<div id="manifestoBox" style="display:none;">
+  <div class="section" style="border-left-color:#10b981;">
+    <strong>📘 A note before you begin</strong>
+    <p>
+      Books are limited, the world is not — explore beyond them.<br>
+      Syllabus is limited, opportunities are not — dive deeper.<br>
+      There is always more space, if you are willing to push yourself.
+    </p>
+  </div>
+</div>
+
+<textarea id="reactionInput" rows="3" placeholder="Type a reaction or question"></textarea>
+
+<label>Choose subject:</label>
+<select id="subject">
+  <option value="Chemistry">Chemistry</option>
+  <option value="Physics">Physics</option>
+  <option value="Biology">Biology</option>
+</select>
+
+<button onclick="explainReaction()">Explain</button>
+<div id="result" class="output" style="display:none;"></div>
+<button onclick="getDetailedAnswer()" id="detailBtn" style="margin-top:10px; display:none;">
+  View Detailed Answer
+</button>
+
+<div id="detailedAnswer" style="margin-top:10px;"></div>
+<div class="section" id="adPlaceholder" style="display:none; opacity:0.6; font-size:14px;">
+  
+</div>
+
+</div>
+
+<!-- PRACTICE -->
+<div id="page-practice" class="page">
+<h2>📄 Competitive Practice Mode</h2>
+<div id="practiceNote" style="display:none;">
+  <div class="section" style="border-left-color:#10b981;">
+    <strong>🧠 Why only 5 questions?</strong>
+    <p>
+      Progress isn’t built by rushing.<br>
+      Five deep, conceptual questions at a time help you think clearly,
+      connect ideas, and grow stronger step by step.
+    </p>
+  </div>
+</div>
+
+<label>Select Subject:</label>
+<select id="practiceSubject">
+  <option value="Chemistry">Chemistry</option>
+  <option value="Physics">Physics</option>
+  <option value="Biology">Biology</option>
+</select>
+
+<label>Select Difficulty:</label>
+<select id="practiceDifficulty">
+  <option value="Easy">Easy</option>
+  <option value="Medium">Medium</option>
+  <option value="Hard">Hard</option>
+</select>
+
+<button onclick="generatePracticeQuestions()" style="background:#10b981;">
+⚡ Generate Practice Questions
+</button>
+<p style="margin-top:10px; font-size:14px; cursor:pointer; color:#6366f1;"
+   onclick="toggleUnitConverter()">
+  🔁 Unit Conversion
+</p>
+
+<div id="practiceOutput" class="output" style="display:none;"></div>
+<div id="unitConverterBox" class="section" style="display:none;">
+  <h3>🔁 Unit Conversion (Quick Reference)</h3>
+
+  <strong>Length</strong><br>
+  m ↔ cm ↔ mm<br>
+  km ↔ m<br><br>
+
+  <strong>Mass</strong><br>
+  kg ↔ g ↔ mg<br><br>
+
+  <strong>Time</strong><br>
+  h ↔ min ↔ s<br><br>
+
+  <strong>Temperature</strong><br>
+  °C ↔ K<br>
+  °C ↔ °F<br><br>
+
+  <strong>Pressure</strong><br>
+  atm ↔ Pa ↔ bar<br>
+  mmHg ↔ atm<br><br>
+
+  <strong>Energy</strong><br>
+  J ↔ kJ<br>
+  eV ↔ J<br><br>
+
+  <strong>Concentration</strong><br>
+  M ↔ mol/L<br>
+  % ↔ ppm
+</div>
+
+</div>
+
+<!-- SAVED -->
+<div id="page-saved" class="page">
+<h2>💾 Offline Saved</h2>
+<div id="savedList"></div>
+</div>
+<!-- GUIDE -->
+<div id="page-guide" class="page">
+<h2>📘 How to Use Saras AI</h2>
+
+<div class="section">
+  <strong>🧠 Ask Smartly</strong>
+  <p>
+    Type your question clearly and click <b>Explain</b>.
+    The tutor gives a focused answer.
+  </p>
+</div>
+
+<div class="section">
+  <strong>📘 Detailed Explanation</strong>
+  <p>
+    Click <b>View Detailed Answer</b> only when needed.
+    This helps save usage.
+  </p>
+</div>
+
+<div class="section">
+  <strong>🕒 Question History</strong>
+  <p>
+    Your recent questions are stored in the <b>Saved</b> section for 24 hours.
+    Check there before asking again.
+  </p>
+</div>
+
+<div class="section">
+  <strong>⭐ Practice Mode</strong>
+  <p>
+    Use Practice Mode to test your understanding.
+  </p>
+</div>
+
+</div>
+<!-- DEEP DIVE -->
+<div id="page-premium" class="page">
+<h2>🌊 Deep Dive</h2>
+<p style="
+  font-size:14px;
+  color:#555;
+  margin-top:6px;
+">
+  Early access · improving with student feedback
+</p>
+</div>
+
+<!-- NAV -->
+<div class="navbar">
+  <div class="nav-item active" onclick="switchPage('home',this)">🏠 Home</div>
+  <div class="nav-item" onclick="switchPage('practice',this)">📄 Practice</div>
+  <div class="nav-item" onclick="switchPage('saved',this)">💾 Saved</div>
+  <div class="nav-item" onclick="switchPage('guide',this)">📘 Guide</div>
+  <div class="nav-item" onclick="switchPage('premium',this)">🌊 Deep Dive</div>
+</div>
+
+<script>
+  let currentQuestion = "";
+function switchPage(pg, el){
+  document.querySelectorAll(".page").forEach(p => p.style.display = "none");
+  document.getElementById("page-" + pg).style.display = "block";
+  document.querySelectorAll(".nav-item").forEach(n => n.classList.remove("active"));
+  el.classList.add("active");
+
+  // ✅ Show manifesto ONLY when Home becomes active
+  if (pg === "home" && !sessionStorage.getItem("manifestoShown")) {
+    setTimeout(() => {
+      const m = document.getElementById("manifestoBox");
+      if (m) m.style.display = "block";
+      sessionStorage.setItem("manifestoShown", "yes");
+    }, 50);
+  }
+  // ✅ Show Practice note only once per session
+if (pg === "practice" && !sessionStorage.getItem("practiceNoteShown")) {
+  setTimeout(() => {
+    const p = document.getElementById("practiceNote");
+    if (p) p.style.display = "block";
+    sessionStorage.setItem("practiceNoteShown", "yes");
+  }, 50);
+ }
+}
+
+// Cleaner (safe for tables)
+function cleanChemistry(txt){
+  return txt
+    .replace(/\\text\{([^}]+)\}/g, "$1")   // ✅ FIX: remove LaTeX \text{}
+    .replace(/\\to|\\rightarrow/g,"→")
+    .replace(/([A-Za-z])_([0-9])/g,(m,a,d)=>a+"₀₁₂₃₄₅₆₇₈₉"[d]);
+}
+
+// Physics & math symbol normalizer (safe, no tables)
+function fixPhysicsSymbols(txt){
+  return txt
+    // Greek letters
+    .replace(/\\alpha/g,"α")
+    .replace(/\\beta/g,"β")
+    .replace(/\\gamma/g,"γ")
+    .replace(/\\theta_0/g,"θ₀")
+    .replace(/\\theta/g,"θ")
+    .replace(/\\lambda/g,"λ")
+    .replace(/\\pi/g,"π")
+    .replace(/\\mu/g,"μ")
+
+    // Operators & symbols
+    .replace(/\\times/g,"×")
+    .replace(/\\circ/g,"°")
+
+    // Square root
+    .replace(/\\sqrt\{([^}]+)\}/g,"√($1)")
+
+    // Fractions
+    .replace(/\\frac\{([^}]+)\}\{([^}]+)\}/g,"($1/$2)")
+
+    // Powers of 10
+    .replace(/10\^\{(-?[0-9]+)\}/g,(m,n)=>{
+      const sup = "⁰¹²³⁴⁵⁶⁷⁸⁹";
+      return "10" + n.replace(/[-0-9]/g,c=>c==="-"?"⁻":sup[c]);
+    })
+
+    // Remove leftover backslashes
+    .replace(/\\/g,"");
+}
+
+// Tutor Mode
+async function explainReaction(){
+  const input = document.getElementById("reactionInput").value.trim();
+  const subject = document.getElementById("subject").value;
+  const result = document.getElementById("result");
+
+  currentQuestion = input;
+
+  if(!input) return alert("Enter a question!");
+
+  result.style.display = "block";
+  document.getElementById("adPlaceholder").style.display = "block";
+
+  result.innerHTML = `<div class="typing">🧠 Preparing answer...</div>`;
+
+  if (window.MathJax) {
+    MathJax.typesetPromise([result]);
+  }
+
+  const prompt = `
+Subject: ${subject}
+Question: ${input}
+`;
+
+  try {
+    const r = await fetch("https://smart-backend-82s8.onrender.com/api/chat", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({message: prompt})
+    });
+
+    const j = await r.json();
+
+    let raw = j.reply || "No response.";
+
+    raw = cleanChemistry(raw);
+    raw = fixPhysicsSymbols(raw);
+
+    let html = marked.parse(raw);
+
+    html = html.replace(/(\d+\.\s*)?(Question:|Topic:|Correct Answer:|Mistake Insight:)/g,
+      (match, num, label) => `${num || ""}<strong>${label}</strong>`
+    );
+
+    result.innerHTML = `
+      <div class="section">
+        <h3>📌 Answer</h3>
+        ${html}
+        <button onclick="saveRenderedTutorAnswer(this)">💾 Save</button>
+      </div>
+    `;
+
+    // ✅ SHOW detailed button
+    document.getElementById("detailBtn").style.display = "block";
+    document.getElementById("detailedAnswer").innerHTML = "";
+
+    // ✅ SAVE TO HISTORY (NEW SYSTEM)
+    saveToHistory(input, html);
+
+  }catch {
+  result.innerHTML = `
+    <div class="section">
+      <h3>⏳ Tutor temporarily resting</h3>
+      <p>
+        The Tutor is currently unavailable due to heavy usage.
+        <br><br>
+        👉 You can still:
+        <ul>
+          <li>Use Practice Mode</li>
+          <li>Review saved answers</li>
+          <li>Explore Unit Conversion</li>
+        </ul>
+      </p>
+    </div>
+  `;
+}
+
+}
+
+// Practice Mode
+async function generatePracticeQuestions(){
+  const subject = document.getElementById("practiceSubject").value;
+  const difficulty = document.getElementById("practiceDifficulty").value;
+  const box = document.getElementById("practiceOutput");
+
+  box.style.display="block";
+  box.innerHTML = `<div class="typing">📄 Preparing ${difficulty} ${subject} questions...</div>`;
+if (window.MathJax) {MathJax.typesetPromise([box]);
+}
+
+const prompt = `
+Generate 5 questions.
+
+Subject: ${subject}
+Difficulty: ${difficulty}
+`;
+
+  const r = await fetch("https://smart-backend-82s8.onrender.com/api/chat",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({message:prompt})
+  });
+
+  const j = await r.json();
+let raw = j.reply || "No response.";
+
+raw = cleanChemistry(raw);
+raw = fixPhysicsSymbols(raw);
+
+let html = marked.parse(raw);
+html = html.replace(
+  /(\d+\.\s*)?(Question:|Topic:|Correct Answer:|Mistake Insight:)/gi,
+  (match, num, label) => `${num || ""}<strong>${label}</strong>`
+);
+
+// 🔥 FINAL: remove AI conversational filler lines (HTML + plain text)
+html = html.replace(
+  /(^|\n|\r|<br>|<hr>|<\/p>)\s*(let me know|would you like|feel free to ask|ask me if|tell me if)[^<\n\r]*(!|\.)?\s*/gi,
+  "$1"
+);
+
+const questions = html.split(/(?=\d+\.\s*Question:)/);
+
+box.innerHTML = questions.map(q => `
+  <div class="section">
+    ${q}
+
+    <button onclick="saveFavouriteFromButton(this)">
+      ⭐ Mark as Favourite
+    </button>
+
+    <button onclick="sendToTutor(this)" style="background:#6366f1;">
+      📘 View detailed answer in Tutor Mode
+    </button>
+  </div>
+`).join("");
+
+if (window.MathJax) {
+  MathJax.typesetPromise([box]);
+}
+
+}
+function sendToTutor(btn){
+  const section = btn.closest(".section");
+
+  const match = section.innerText.match(/Question:\s*(.*)/);
+  const questionOnly = match ? match[1].trim() : "";
+
+  localStorage.setItem("tutorAutoQuestion", questionOnly);
+
+  const homeTab = document.querySelector(".nav-item");
+  switchPage("home", homeTab);
+
+  setTimeout(() => {
+    const input = document.getElementById("reactionInput");
+    input.value = questionOnly;
+    explainReaction();
+  }, 200);
+}
+function saveFavouriteFromButton(btn){
+  const section = btn.closest(".section");
+
+  const subject = document.getElementById("practiceSubject").value;
+  const difficulty = document.getElementById("practiceDifficulty").value;
+
+  // ✅ Remove ALL buttons before saving (future-safe)
+  section.querySelectorAll("button").forEach(b => b.remove());
+
+  const content = section.innerHTML.trim();
+
+  saveFavouritePractice(subject, difficulty, content);
+}
+// 💾 Save rendered Tutor answer (offline-safe)
+function saveRenderedTutorAnswer(btn){
+  const section = btn.closest(".section");
+
+  // remove save button before storing
+  btn.remove();
+
+  const content = section.innerHTML.trim();
+
+  const saved = JSON.parse(localStorage.getItem("savedReactions") || "[]");
+  saved.push({ html: content, time: Date.now() });
+
+  localStorage.setItem("savedReactions", JSON.stringify(saved));
+  loadSaved();
+
+  alert("💾 Saved offline");
+}
+  
+
+// Offline
+function saveReaction(q,ans){
+  const s = JSON.parse(localStorage.getItem("savedReactions")||"[]");
+  s.push({q,ans});
+  localStorage.setItem("savedReactions",JSON.stringify(s));
+  loadSaved();
+}
+// ⭐ Favourite Practice Questions
+function saveFavouritePractice(subject, difficulty, content){
+  const favs = JSON.parse(localStorage.getItem("favouritePractice") || "[]");
+
+  // prevent duplicates
+  if(favs.some(f => f.content === content)) return;
+
+  favs.push({
+    subject,
+    difficulty,
+    content,
+    time: Date.now()
+  });
+
+  localStorage.setItem("favouritePractice", JSON.stringify(favs));
+  alert("⭐ Added to Favourites");
+}
+
+function loadSaved(){
+  const box = document.getElementById("savedList");
+
+  const tutor = JSON.parse(localStorage.getItem("savedReactions") || "[]");
+  const favs  = JSON.parse(localStorage.getItem("favouritePractice") || "[]");
+
+  let html = "";
+const history = JSON.parse(localStorage.getItem("todayHistory") || "[]");
+
+if(history.length){
+  html += "<h3>🕒 Today's History</h3>";
+
+  html += history.map(h => `
+    <div class="item">
+      <strong>Q:</strong> ${h.question}
+      <div class="section">${h.answer}</div>
+    </div>
+  `).join("");
+}
+  if(tutor.length){
+ html += tutor.map((x, i) =>
+  `<div class="item">
+     ${x.html}
+     <button onclick="deleteSavedItem('tutor', ${i})"
+       style="background:#ef4444;margin-top:8px;">
+       🗑 Delete
+     </button>
+   </div>`
+).join("");
+
+}
+
+  if(favs.length){
+    html += "<h3>⭐ Favourite Practice Questions</h3>";
+  html += favs.map((f, i) =>
+  `<div class="item">
+     <small>${f.subject} · ${f.difficulty}</small>
+     ${f.content}
+     <button onclick="deleteSavedItem('practice', ${i})"
+       style="background:#ef4444;margin-top:8px;">
+       🗑 Delete
+     </button>
+   </div>`
+).join("");
+
+  }
+
+  if(!html) html = "<p>No saved items yet.</p>";
+
+  box.innerHTML = html;
+}
+function deleteSavedItem(type, index){
+  if(type === "tutor"){
+    const tutor = JSON.parse(localStorage.getItem("savedReactions") || "[]");
+    tutor.splice(index, 1);
+    localStorage.setItem("savedReactions", JSON.stringify(tutor));
+  }
+
+  if(type === "practice"){
+    const favs = JSON.parse(localStorage.getItem("favouritePractice") || "[]");
+    favs.splice(index, 1);
+    localStorage.setItem("favouritePractice", JSON.stringify(favs));
+  }
+
+  loadSaved();
+}
+  
+loadSaved();
+// 🔥 Trigger Home logic once on initial load
+const firstHomeTab = document.querySelector(".nav-item");
+switchPage("home", firstHomeTab);
+function toggleUnitConverter(){
+  const box = document.getElementById("unitConverterBox");
+  box.style.display = box.style.display === "none" ? "block" : "none";
+}
+async function getDetailedAnswer() {
+  const outputDiv = document.getElementById("detailedAnswer");
+
+  if (!currentQuestion) {
+    return alert("Please ask a question first!");
+  }
+
+  outputDiv.innerHTML = `<div class="typing">🧠 Generating detailed answer...</div>`;
+
+  const subject = document.getElementById("subject").value;
+
+const prompt = `
+Subject: ${subject}
+Question: ${currentQuestion}
+
+Provide a step-by-step explanation in simple language.
+
+Do NOT repeat the question.
+Do NOT include instructions in the answer.
+Start directly with explanation.
+`;
+
+  try {
+    const r = await fetch("https://smart-backend-82s8.onrender.com/api/chat", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ message: prompt })
+    });
+
+    const j = await r.json();
+
+    let raw = j.reply || "No response.";
+
+    raw = cleanChemistry(raw);
+    raw = fixPhysicsSymbols(raw);
+
+    let html = marked.parse(raw);
+
+    outputDiv.innerHTML = `
+      <div class="section">
+        <h3>📘 Detailed Explanation</h3>
+        ${html}
+      </div>
+    `;
+
+    // Hide button after click
+    document.getElementById("detailBtn").style.display = "none";
+
+  } catch {
+    outputDiv.innerHTML = `<p>⚠️ Unable to load detailed answer.</p>`;
+  }
+}
+
+function saveToHistory(question, answer){
+  let history = JSON.parse(localStorage.getItem("todayHistory") || "[]");
+
+  const now = Date.now();
+
+  // remove old (24 hrs)
+  history = history.filter(item => now - item.time < 24 * 60 * 60 * 1000);
+
+  // avoid duplicates
+  if(history.some(h => h.question === question)) return;
+
+  history.push({
+    question,
+    answer,
+    time: now
+  });
+
+  localStorage.setItem("todayHistory", JSON.stringify(history));
+  loadSaved();
+}
+</script>
+
+</body>
+</html>
