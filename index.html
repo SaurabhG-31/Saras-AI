@@ -247,6 +247,7 @@ padding-left:10px;
   <div class="nav-item" onclick="switchPage('saved',this)">💾 Saved</div>
   <div class="nav-item" onclick="switchPage('guide',this)">📘 Guide</div>
   <div class="nav-item" onclick="switchPage('premium',this)">🌊 Deep Dive</div>
+  <div class="nav-item" onclick="openFeedback()">💬 Feedback</div>
 </div>
 
 <script>
@@ -682,9 +683,16 @@ function saveToHistory(question, answer){
   localStorage.setItem("todayHistory", JSON.stringify(history));
   loadSaved();
 }
+  function openFeedback(){
+  window.open(
+    "mailto:saras.ai.feedback@gmail.com?subject=Saras AI Feedback",
+    "_blank"
+  );
+}
 </script>
 
 </body>
 </html>
+
 
 
