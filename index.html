@@ -48,6 +48,23 @@ th{background:#e6e9ff;}
 
 .typing{font-family:monospace;padding:10px;color:#444;animation:blink 1s steps(1) infinite;}
 @keyframes blink{50%{opacity:.4;}}
+  .feedback-btn{
+  position: fixed;
+  bottom: 90px;
+  right: 20px;
+  background: #6366f1;
+  color: white;
+  padding: 12px 16px;
+  border-radius: 30px;
+  font-weight: bold;
+  text-decoration: none;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+  z-index: 1000;
+}
+
+.feedback-btn:hover{
+  background:#4f46e5;
+}
 </style>
   <!-- MathJax for Physics & Chemistry notation -->
   <script>
@@ -684,9 +701,14 @@ function saveToHistory(question, answer){
   loadSaved();
 }
 </script>
-
+<a href="https://docs.google.com/forms/d/e/1FAIpQLSd8v7hIEvgaOMsp5l_egxC9mYg5_tl6N87i6OcLd9lPoEKoTA/viewform"
+   target="_blank"
+   class="feedback-btn">
+   💬 Feedback
+</a>
 </body>
 </html>
+
 
 
 
